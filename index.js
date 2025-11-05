@@ -5,43 +5,44 @@ import http from "http";
 
 const app = express();
 
+// ✅ Your frontend domain (no trailing slash!)
 const FRONTEND_URL = "https://chatapp-client-7ak1.vercel.app";
 
-app.use(cors({
-  origin: [FRONTEND_URL],
-  methods: ["GET", "POST"],
-  credentials: true,
-}));
+// ✅ Enable CORS for Express routes
+app.use(
+  cors({
+    origin: FRONTEND_URL,
+    methods: ["GET", "POST"],
+    credentials: true,
+  })
+);
 
+// Create HTTP server
 const server = http.createServer(app);
 
+// ✅ Enable CORS for Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: [FRONTEND_URL],
+    origin: FRONTEND_URL,
     methods: ["GET", "POST"],
     credentials: true,
   },
 });
 
+// 🧠 Simple test route (for Railway health check)
+app.get("/", (req, res) => {
+  res.send("✅ ChatApp Socket.io server running!");
+});
+
+// 🎧 Socket.IO Events
 io.on("connection", (socket) => {
   console.log("✅ New user connected:", socket.id);
 
   socket.on("join", (roomId) => {
     socket.join(roomId);
-    console.log(`User ${socket.id} joined room ${roomId}`);
     socket.to(roomId).emit("message", {
       sender: "System",
-      text: `A user joined room: ${roomId}`,
-      room: roomId,
-    });
-  });
-
-  socket.on("leave", (roomId) => {
-    socket.leave(roomId);
-    console.log(`User ${socket.id} left room ${roomId}`);
-    socket.to(roomId).emit("message", {
-      sender: "System",
-      text: `A user left room: ${roomId}`,
+      text: `A user joined ${roomId}`,
       room: roomId,
     });
   });
@@ -51,17 +52,21 @@ io.on("connection", (socket) => {
     socket.to(message.room).emit("message", message);
   });
 
+  socket.on("leave", (roomId) => {
+    socket.leave(roomId);
+    socket.to(roomId).emit("message", {
+      sender: "System",
+      text: `A user left ${roomId}`,
+      room: roomId,
+    });
+  });
+
   socket.on("disconnect", () => {
-    console.log(`❌ User disconnected: ${socket.id}`);
+    console.log("❌ Disconnected:", socket.id);
   });
 });
 
-// 🧠 Add a basic route for Railway health check
-app.get("/", (req, res) => {
-  res.send("✅ ChatApp Socket.io server running!");
-});
-
-// ✅ Use Railway's dynamic port
+// ✅ Use Railway dynamic port
 const PORT = process.env.PORT || 5050;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
