@@ -4,13 +4,20 @@ import { Server } from "socket.io";
 import http from "http";
 
 const app = express();
-app.use(cors());
+
+const FRONTEND_URL = "https://chatapp-client-7ak1.vercel.app";
+
+app.use(cors({
+  origin: [FRONTEND_URL],
+  methods: ["GET", "POST"],
+  credentials: true,
+}));
 
 const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: ["https://chatapp-client-zeta-mocha.vercel.app"],
+    origin: [FRONTEND_URL],
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -19,7 +26,6 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("✅ New user connected:", socket.id);
 
-  // Join a room
   socket.on("join", (roomId) => {
     socket.join(roomId);
     console.log(`User ${socket.id} joined room ${roomId}`);
@@ -30,7 +36,6 @@ io.on("connection", (socket) => {
     });
   });
 
-  // Leave a room
   socket.on("leave", (roomId) => {
     socket.leave(roomId);
     console.log(`User ${socket.id} left room ${roomId}`);
@@ -41,18 +46,23 @@ io.on("connection", (socket) => {
     });
   });
 
-  // Send message to specific room
   socket.on("send", (message) => {
     console.log("📨 Message:", message);
     socket.to(message.room).emit("message", message);
   });
 
-  // Handle disconnect
   socket.on("disconnect", () => {
     console.log(`❌ User disconnected: ${socket.id}`);
   });
 });
 
-server.listen(5050, () => {
-  console.log("🚀 Server running on port 5050");
+// 🧠 Add a basic route for Railway health check
+app.get("/", (req, res) => {
+  res.send("✅ ChatApp Socket.io server running!");
+});
+
+// ✅ Use Railway's dynamic port
+const PORT = process.env.PORT || 5050;
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
