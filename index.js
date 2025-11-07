@@ -9,7 +9,7 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "http://chatapp-client-7ak1.vercel.app",
+      "https://chatapp-client-7ak1.vercel.app",
       "http://localhost:5173",
     ],
     methods: ["GET", "POST"],
