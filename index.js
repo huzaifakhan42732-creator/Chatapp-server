@@ -1,73 +1,41 @@
 import express from "express";
-import cors from "cors";
-import { Server } from "socket.io";
 import http from "http";
+import { Server } from "socket.io";
 
 const app = express();
-
-// ✅ Your frontend domain (no trailing slash!)
-const FRONTEND_URL = "https://chatapp-client-7ak1.vercel.app";
-
-// ✅ Enable CORS for Express routes
-app.use(
-  cors({
-    origin: FRONTEND_URL,
-    methods: ["GET", "POST"],
-    credentials: true,
-  })
-);
-
-// Create HTTP server
 const server = http.createServer(app);
-
-// ✅ Enable CORS for Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: FRONTEND_URL,
+    origin: [
+      "https://chatapp-client-7ak1.vercel.app", // your deployed frontend
+      "http://localhost:5173" // for local testing
+    ],
     methods: ["GET", "POST"],
     credentials: true,
   },
-});
+})
 
-// 🧠 Simple test route (for Railway health check)
 app.get("/", (req, res) => {
-  res.send("✅ ChatApp Socket.io server running!");
+  res.send("<h1>Hello from Realtime Socket Chat Server</h1>");
 });
 
-// 🎧 Socket.IO Events
 io.on("connection", (socket) => {
-  console.log("✅ New user connected:", socket.id);
-
+  console.log("a user connected", socket.id);
+  // Join a room
   socket.on("join", (roomId) => {
     socket.join(roomId);
-    socket.to(roomId).emit("message", {
-      sender: "System",
-      text: `A user joined ${roomId}`,
-      room: roomId,
-    });
   });
-
-  socket.on("send", (message) => {
-    console.log("📨 Message:", message);
-    socket.to(message.room).emit("message", message);
-  });
-
   socket.on("leave", (roomId) => {
     socket.leave(roomId);
-    socket.to(roomId).emit("message", {
-      sender: "System",
-      text: `A user left ${roomId}`,
-      room: roomId,
-    });
   });
 
-  socket.on("disconnect", () => {
-    console.log("❌ Disconnected:", socket.id);
+//   Broadcast to room 
+  socket.on("send", (message) => {
+    console.log(message)
+    socket.to(message.room).emit("message", message);
   });
 });
 
-// ✅ Use Railway dynamic port
-const PORT = process.env.PORT || 5050;
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+server.listen(5050, () => {
+  console.log("listening on *:5050");
 });
