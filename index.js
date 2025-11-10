@@ -8,10 +8,7 @@ const app = express();
 // ✅ Add Express CORS
 app.use(
   cors({
-    origin: [
-      "https://chatapp-client-7ak1.vercel.app",
-      "http://localhost:5173",
-    ],
+    origin: "*",
     methods: ["GET", "POST"],
     credentials: true,
   })
@@ -21,22 +18,19 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: [
-      "https://chatapp-client-7ak1.vercel.app",
-      "http://localhost:5173",
-    ],
+    origin: "*",
     methods: ["GET", "POST"],
     credentials: true,
   },
   transports: ["websocket", "polling"],
 
-  // ✅ Helps prevent Railway from timing out sockets
-  pingTimeout: 60000,   // 60s before timing out
-  pingInterval: 25000,  // Ping every 25s
+  //  Helps prevent Railway from timing out sockets
+  pingTimeout: 60000,   
+  pingInterval: 25000,  
 });
 
 app.get("/", (req, res) => {
-  res.send("<h1>Hello from NexaChat Realtime Server 🚀</h1>");
+  res.send("<h1>Hello from NexaChat Realtime Server </h1>");
 });
 
 io.on("connection", (socket) => {
@@ -51,7 +45,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("send", (message) => {
-    console.log("📩 Message:", message);
+    console.log("Message:", message);
     socket.to(message.room).emit("message", message);
   });
 
