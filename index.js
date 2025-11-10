@@ -1,18 +1,8 @@
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
-import cors from "cors";
 
 const app = express();
-
-// ✅ Add Express CORS
-app.use(
-  cors({
-    origin: "*",
-    methods: ["GET", "POST"],
-    credentials: true,
-  })
-);
 
 const server = http.createServer(app);
 
@@ -22,11 +12,6 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
     credentials: true,
   },
-  transports: ["websocket", "polling"],
-
-  //  Helps prevent Railway from timing out sockets
-  pingTimeout: 60000,   
-  pingInterval: 25000,  
 });
 
 app.get("/", (req, res) => {
@@ -54,5 +39,5 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 5050;
+const PORT = 5050;
 server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
